@@ -1,18 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import PlayerCard from './component/PlayerCard';
+import NewPlayerForm from './component/NewPlayerFrom';
 import './form.css'
 
+//API linmk Information
 const cohortName = '2308-ACC-PT-WEB-PT-B';
 const APIURL = `https://fsa-puppy-bowl.herokuapp.com/api/${cohortName}`;
 
 const App = () => {
   const [players, setPlayers] = useState([]);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
-  const [name, setName] = useState('');
-  const [breed, setBreed] = useState('');
-  const [status, setStatus] = useState('');
-  const [image, setImage] = useState('');
-  const [teamId, setTeamId] = useState('');
+  //Added search const
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+
+  useEffect(() => {
+    // Filter players based on name
+    const results = players.filter(player =>
+      player.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setSearchResults(results);
+  }, [searchTerm, players]);
 
   useEffect(() => {
     fetchAllPlayers();
@@ -79,111 +87,6 @@ const App = () => {
     }
   };
 
-  const renderNewPlayerForm = () => {
-    try {
-      return (
-        <form className='npform' onSubmit={handleNewPlayerSubmit}>
-          <label>
-            <p> 
-            Name: {" "}
-            <input
-            label="name"
-            type="text"
-            id="name"
-            placeholder="Puppy 4-20 characters"
-            minLength={4}
-            maxLength={20}
-            required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          </p>
-        </label>
-        <label>
-            <p>
-            Breed: {" "}
-            <input
-            label="breed"
-            type="text"
-            id="breed"
-            placeholder="Breed 1-20 characters"
-            minLength={1}
-            maxLength={20}
-            required
-            value={breed}
-            onChange={(e) => setBreed(e.target.value)}
-          />
-          </p>
-        </label>
-        <label>
-          <p>
-          Status: {" "}
-          <select
-            label="status"
-            id="status"
-            required
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-          >
-            <option value="" disabled>Please Select One:</option>
-            <option value="bench">bench</option>
-            <option value="field">field</option>
-          </select>
-          </p>
-        </label>
-        <label>
-            <p> 
-            Photo: {" "}
-            <input
-            label="image"
-            type="text"
-            id="image"
-            placeholder="Image Url"
-            required
-            value={image}
-            onChange={(e) => setImage(e.target.value)}
-          />
-          </p>
-        </label>
-        <label> 
-            <p>
-            TeamID: {" "}
-            <input
-            label="teamId"
-            type="text"
-            id="teamId"
-            placeholder="Enter Team ID"
-            required
-            value={teamId}
-            onChange={(e) => setTeamId(e.target.value)}
-          />
-          </p>
-        </label>
-        <button>Submit</button>
-        </form>
-      );
-    } catch (err) {
-      console.error('Error rendering the new player form!', err);
-    }
-  };
-
-  const handleNewPlayerSubmit = async (event) => {
-    event.preventDefault();
-    const playerObj = {
-      name,
-      breed,
-      status,
-      image,
-      teamId
-    };
-    await addNewPlayer(playerObj);
-    setName('');
-    setBreed('');
-    setStatus('');
-    setImage('');
-    setTeamId('');
-  };
-
   const handleRemovePlayer = async (playerId) => {
     await removePlayer(playerId);
   };
@@ -192,10 +95,23 @@ const App = () => {
     await fetchSinglePlayer(playerId);
   };
 
+  const handleSearch = (event) => {
+    setSearchTerm(event.target.value);
+  };
+//Changed newPlayerForm to component
   return (
     <div className="App">
+    <div>
+        <input
+          type="text"
+          placeholder="Search puppy players."
+          value={searchTerm}
+          onChange={handleSearch}
+        />
+         <NewPlayerForm addNewPlayer={addNewPlayer} />
+      </div>
       <ul>
-        {players.map((player) => (
+        {searchResults.map((player) => (
           <PlayerCard
             key={player.id}
             player={player}
@@ -218,7 +134,6 @@ const App = () => {
             <p>Cohort ID: {selectedPlayer.cohortId}</p></li>}
         </div>
       )}
-      {renderNewPlayerForm()}
     </div>
   );
 };
